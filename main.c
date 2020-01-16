@@ -25,6 +25,8 @@ typedef struct {
 }__attribute__((packed)) sWavHeader;
 
 uint32_t numOfSamples = 0;
+int32_t oldsamplerate = 10000;
+int32_t newsamplerate = 8192;
 int32_t lowLimit;
 int32_t highLimit;
 int16_t * leftChannel = NULL;
@@ -89,6 +91,7 @@ void printfHeader(sWavHeader * header) {
 	}
 	printf("NumChannels : %d.\n", header->NumChannels);
 	printf("SampleRate : %d.\n", header->SampleRate);
+	oldsamplerate =  header->SampleRate;
 	printf("ByteRate : %d.\n", header->ByteRate);
 	printf("BlockAlign : %d.\n", header->BlockAlign);
 	printf("BitsPerSample : %d.\n", header->BitsPerSample);
@@ -101,9 +104,16 @@ void printfHeader(sWavHeader * header) {
 }
 
 void fprintfChannel(FILE *pFile, int16_t * array, uint32_t size) {
+	int32_t samplerunner = 0-newsamplerate/2;
+	uint32_t count = 0;
 	for (uint32_t i = 0; i < size; ++i) {
-		fprintf(pFile, "0x%02x, // %d\n", ConvertToDACValue(array[i]),
-				array[i]);
+		samplerunner += oldsamplerate;
+		while (samplerunner>newsamplerate) {
+			samplerunner -= newsamplerate;
+			i++;
+		}
+		fprintf(pFile, "0x%02x, // %d \n", ConvertToDACValue(array[i]),count);
+		count++;
 	}
 }
 
